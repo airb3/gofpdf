@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/airb3/gofpdf"
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/aztec"
 	"github.com/boombuler/barcode/codabar"
@@ -34,8 +35,7 @@ import (
 	"github.com/boombuler/barcode/ean"
 	"github.com/boombuler/barcode/qr"
 	"github.com/boombuler/barcode/twooffive"
-	"github.com/jung-kurt/gofpdf"
-	"github.com/ruudk/golang-pdf417"
+	pdf417 "github.com/ruudk/golang-pdf417"
 )
 
 // barcodes represents the barcodes that have been registered through this
