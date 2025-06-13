@@ -3073,6 +3073,18 @@ func (f *Fpdf) Image(imageNameStr string, x, y, w, h float64, flow bool, tp stri
 	f.ImageOptions(imageNameStr, x, y, w, h, flow, options, link, linkStr)
 }
 
+// Image puts a JPEG, PNG or GIF image in the current page.
+//
+// Deprecated in favor of ImageOptions -- see that function for
+// details on the behavior of arguments
+func (f *Fpdf) ImageFromByte(imageNameStr string, x, y, w, h float64, flow bool, tp string, link int, linkStr string, file []byte) {
+	options := ImageOptions{
+		ReadDpi:   false,
+		ImageType: tp,
+	}
+	f.ImageOptionsFromByte(imageNameStr, x, y, w, h, flow, options, link, linkStr, file)
+}
+
 // ImageOptions puts a JPEG, PNG or GIF image in the current page. The size it
 // will take on the page can be specified in different ways. If both w and h
 // are 0, the image is rendered at 96 dpi. If either w or h is zero, it will be
@@ -3114,6 +3126,18 @@ func (f *Fpdf) ImageOptions(imageNameStr string, x, y, w, h float64, flow bool, 
 		return
 	}
 	info := f.RegisterImageOptions(imageNameStr, options)
+	if f.err != nil {
+		return
+	}
+	f.imageOut(info, x, y, w, h, options.AllowNegativePosition, flow, link, linkStr)
+	return
+}
+
+func (f *Fpdf) ImageOptionsFromByte(imageNameStr string, x, y, w, h float64, flow bool, options ImageOptions, link int, linkStr string, file []byte) {
+	if f.err != nil {
+		return
+	}
+	info := f.RegisterImageOptionsFromByte(imageNameStr, options, file)
 	if f.err != nil {
 		return
 	}
@@ -3245,6 +3269,27 @@ func (f *Fpdf) RegisterImageOptions(fileStr string, options ImageOptions) (info 
 	}
 
 	return f.RegisterImageOptionsReader(fileStr, options, file)
+}
+
+func (f *Fpdf) RegisterImageOptionsFromByte(fileStr string, options ImageOptions, fileByte []byte) (info *ImageInfoType) {
+	info, ok := f.images[fileStr]
+	if ok {
+		return
+	}
+
+	reader := bytes.NewReader(fileByte)
+
+	// First use of this image, get info
+	if options.ImageType == "" {
+		pos := strings.LastIndex(fileStr, ".")
+		if pos < 0 {
+			f.err = fmt.Errorf("image file has no extension and no type was specified: %s", fileStr)
+			return
+		}
+		options.ImageType = fileStr[pos+1:]
+	}
+
+	return f.RegisterImageOptionsReader(fileStr, options, reader)
 }
 
 // GetImageInfo returns information about the registered image specified by
